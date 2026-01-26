@@ -20,7 +20,7 @@ export function debugLog(label: string, data: unknown): void {
 export function debugCost(usage: Usage | undefined): void {
   if (!DEBUG || !usage) return;
   const cost = usage.cost !== undefined ? ` $${usage.cost.toFixed(6)}` : '';
-  console.log(`${GREY}[COST] ↑${usage.prompt_tokens} ↓${usage.completion_tokens} Σ${usage.total_tokens}${cost}${RESET}`);
+  console.log(`${GREY}[COST] ↑ ${usage.prompt_tokens} ↓ ${usage.completion_tokens} Σ ${usage.total_tokens}${cost}${RESET}`);
 }
 
 function formatTime(ms: number): string {

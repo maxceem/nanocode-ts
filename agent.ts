@@ -49,8 +49,8 @@ async function callLLM(messages: Message[]): Promise<ApiResponse> {
   }
 
   const result = await response.json();
-  debugTime('LLM', Date.now() - start);
   debugLog('LLM Response', result);
+  debugTime('LLM', Date.now() - start);
   debugCost(result.usage);
 
   return result;
