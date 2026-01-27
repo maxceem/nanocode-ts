@@ -35,8 +35,5 @@ coverage/
 # Claude settings
 .claude/
 
-# Internal MDs
-PLAN.md
-
 # Helpful resources
 /_data
