@@ -1,15 +1,10 @@
+import { Usage, ToolCall } from './types';
+
 const DEBUG = process.env.DEBUG === 'true';
 
 // ANSI color codes for debug output
 const GREY = '\x1b[90m';
 const RESET = '\x1b[0m';
-
-export interface Usage {
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
-  cost?: number;
-}
 
 export function debugLog(label: string, data: unknown): void {
   if (!DEBUG) return;
@@ -38,4 +33,10 @@ function formatTime(ms: number): string {
 export function debugTime(label: string, ms: number): void {
   if (!DEBUG) return;
   console.log(`${GREY}[TIME] ${label}: ${formatTime(ms)}${RESET}`);
+}
+
+export function debugToolCall(toolCall: ToolCall): void {
+  if (!DEBUG) return;
+  console.log(`${GREY}[TOOL] ${toolCall.function.name} (${toolCall.id})${RESET}`);
+  console.log(`${GREY}        ${toolCall.function.arguments}${RESET}`);
 }
