@@ -22,11 +22,7 @@ export interface Message {
 }
 
 export interface Choice {
-  message: {
-    role: 'assistant';
-    content: string | null;
-    tool_calls?: ToolCall[];
-  };
+  message: Message;
   finish_reason: string;
 }
 
@@ -48,10 +44,3 @@ export interface ApiResponse {
   usage?: Usage;
 }
 
-// Tool execution types
-export type ToolHandler = (args: Record<string, string>) => Promise<string>;
-
-export interface ToolDefinition {
-  schema: Tool;
-  handler: ToolHandler;
-}

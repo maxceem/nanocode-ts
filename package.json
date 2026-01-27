@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Minimalist Claude Code alternative in TypeScript",
   "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "tsc && node --env-file=.env dist/agent.js"
   },
