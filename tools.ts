@@ -5,6 +5,9 @@ import type { Tool } from './types';
 
 const execAsync = promisify(exec);
 
+// tools that require user confirmation before execution
+export const dangerousTools = new Set(['bash']);
+
 // tools schema for LLM
 export const tools: Tool[] = [
   {

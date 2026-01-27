@@ -1,6 +1,6 @@
 import * as readline from 'node:readline/promises';
 import { Message, ApiResponse, Usage } from './types';
-import { tools, executeTool } from './tools';
+import { tools, executeTool, dangerousTools } from './tools';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL = process.env.MODEL || 'minimax/minimax-m2.1';
@@ -15,8 +15,9 @@ const GREEN = '\x1b[32m';
 const RED = '\x1b[31m';
 const MAGENTA = '\x1b[35m';
 
-// conversation history
+// global state
 let messages: Message[] = [];
+let rl: readline.Interface;
 
 async function callLLM(messages: Message[]): Promise<ApiResponse> {
   const requestBody = {
@@ -80,6 +81,12 @@ function printToolCall(name: string, args: Record<string, unknown>): void {
   console.log(`\n  ${CYAN}${toolName}${RESET}(${DIM}${argPreview}${RESET})`);
 }
 
+async function confirmTool(): Promise<boolean> {
+  const answer = await rl.question(`\n  ${MAGENTA}Confirm execution?${RESET} [y/${BOLD}N${RESET}] `);
+
+  return answer.toLowerCase() === 'y';
+}
+
 function printToolResult(result: string): void {
   const lines = result.split('\n');
   let preview = lines[0].slice(0, 60);
@@ -136,7 +143,13 @@ async function runAgentLoop(userMessage: string) {
     for (const { id, function: { name, arguments: argsJson } } of message.tool_calls) {
       const args = JSON.parse(argsJson);
       printToolCall(name, args);
-      const result = await executeTool(name, args);
+
+      let result = '';
+      if (!dangerousTools.has(name) || await confirmTool()) {
+        result = await executeTool(name, args);
+      } else {
+        result = 'denied by user';
+      }
       printToolResult(result);
 
       messages.push({ role: 'tool', tool_call_id: id, content: result });
@@ -145,7 +158,7 @@ async function runAgentLoop(userMessage: string) {
 }
 
 async function main() {
-  const rl = readline.createInterface({
+  rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
