@@ -1,13 +1,21 @@
 # nanocode-ts
 
-Minimalist agentic CLI tool in TypeScript. A stripped-down Claude Code alternative.
+Minimalistic implementation of agentic coding agent similar to Claude Code in TypeScript for learning purposes.
 
-## Development
+- The code has to be as easy to understand and follow as possible.
+- It should still follow TypeScript and Node.js best practices.
+- The minimal number lines or the speed of work is not priority - priority is that how easy is it to read and understand code.
+- We should not use third party libraries, but we must use any standard Node.js libraries when they make code simpler and easier to understand.
+
+## Developing
+
+Alway use `npm` to keep things simple.
 
 ```bash
 npm start        # compiles and runs
-pnpm start       # alternative
 ```
+
+Always checking typing by `tsc --onEmit`.
 
 ## Environment
 
@@ -18,11 +26,11 @@ Copy `.env.example` to `.env` and set:
 
 ## Architecture
 
-Three files, no dependencies beyond Node.js built-ins:
+Three files in `src/`, no dependencies beyond Node.js built-ins:
 
-- `agent.ts` - Main entry point with agentic loop and CLI
-- `tools.ts` - Tool definitions and handlers
-- `types.ts` - TypeScript interfaces for API and messages
+- `src/agent.ts` - Main entry point with agentic loop and CLI
+- `src/tools.ts` - Tool definitions and handlers
+- `src/types.ts` - TypeScript interfaces for API and messages
 
 ### Agentic Loop Pattern
 
