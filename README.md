@@ -1,6 +1,6 @@
 # nanocode-ts
 
-**nanocode-ts** — a minimalistic coding agent implementation in TypeScript.
+**nanocode-ts** - a minimalistic coding agent implementation in TypeScript.
 
 ![nanocode-ts screenshot](./screenshot.png)
 
@@ -46,7 +46,7 @@ npm start
 ## Inspiring Resources
 
 - [nanocode](https://github.com/1rgs/nanocode) - Python implementation of a minimal coding agent in ~250 lines of code from [Rahul](https://x.com/rahulgs).
-- [Deep Dive into LLMs like ChatGPT](https://www.youtube.com/watch?v=7xTGNNLPyMI) - the best video explaining how LLMs work, a must-watch. By [Andrej Karpathy](https://x.com/karpathy).
+- [Deep Dive into LLMs like ChatGPT](https://www.youtube.com/watch?v=7xTGNNLPyMI) - the best video explaining how LLMs work by [Andrej Karpathy](https://x.com/karpathy) - a must-watch.
 
 ## License
 
