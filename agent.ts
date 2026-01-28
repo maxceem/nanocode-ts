@@ -6,6 +6,14 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL = process.env.MODEL || 'minimax/minimax-m2.1';
 const API_URL = process.env.API_URL || 'https://openrouter.ai/api/v1/chat/completions';
 
+if (!OPENROUTER_API_KEY) {
+  console.error('Missing OPENROUTER_API_KEY environment variable');
+  process.exit(1);
+}
+
+// prevent infinite tool-call loops for safety
+const MAX_AGENT_LOOPS = 10;
+
 // ANSI colors
 const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';
@@ -27,7 +35,7 @@ async function callLLM(messages: Message[]): Promise<ApiResponse> {
     n: 1, // we don't need alternative completions from LLM, we only ask for 1 version of response
   };
 
-  const start = Date.now();
+  const startTime = Date.now();
   printThinking();
 
   const response = await fetch(
@@ -47,7 +55,7 @@ async function callLLM(messages: Message[]): Promise<ApiResponse> {
   }
 
   const result = await response.json();
-  printLLMUsage(Date.now() - start, result.usage);
+  printLLMUsage(Date.now() - startTime, result.usage);
 
   return result;
 }
@@ -81,7 +89,7 @@ function printToolCall(name: string, args: Record<string, unknown>): void {
   console.log(`\n  ${CYAN}${toolName}${RESET}(${DIM}${argPreview}${RESET})`);
 }
 
-async function confirmTool(): Promise<boolean> {
+async function userConfirmsTool(): Promise<boolean> {
   const answer = await rl.question(`\n  ${MAGENTA}Confirm execution?${RESET} [y/${BOLD}N${RESET}] `);
 
   return answer.toLowerCase() === 'y';
@@ -123,13 +131,20 @@ async function runAgentLoop(userMessage: string) {
   messages.push({ role: 'user', content: userMessage });
 
   // keep calling LLM as long as it wants to call tools
+  let steps = 0;
   while (true) {
+    steps += 1;
+    if (steps > MAX_AGENT_LOOPS) {
+      console.log(`${MAGENTA}● Stopped after ${MAX_AGENT_LOOPS} loops (safety limit)${RESET}`);
+      break;
+    }
+
     const { choices: [{ message, finish_reason }] } = await callLLM(messages);
 
     // add assistant response to history including tool_calls
     messages.push({ role: 'assistant', content: message.content, tool_calls: message.tool_calls });
 
-     // print assistant response if any
+    // print assistant response if any
     if (message.content?.trim()) {
       printAssistantResponse(message.content.trim());
     }
@@ -140,16 +155,28 @@ async function runAgentLoop(userMessage: string) {
     }
 
     // call tools that LLM wants to call and add results to history
-    for (const { id, function: { name, arguments: argsJson } } of message.tool_calls) {
-      const args = JSON.parse(argsJson);
-      printToolCall(name, args);
-
+    for (const { id, function: { name, arguments: argsJSONString } } of message.tool_calls) {
+      let args: Record<string, unknown> | undefined;
+      let argsParseError: unknown;
       let result = '';
-      if (!dangerousTools.has(name) || await confirmTool()) {
-        result = await executeTool(name, args);
-      } else {
-        result = 'denied by user';
+
+      try {
+        args = JSON.parse(argsJSONString);
+      } catch (err) {
+        argsParseError = err;
       }
+
+      printToolCall(name, argsParseError ? { malformedJSON: argsJSONString } : args!);
+
+      if (argsParseError) {
+        const errorMessage = argsParseError instanceof Error ? argsParseError.message : String(argsParseError);
+        result = `error: invalid tool arguments JSON (${errorMessage})`;
+      } else if (dangerousTools.has(name) && !(await userConfirmsTool())) {
+        result = 'denied by user';
+      } else {
+        result = await executeTool(name, args!);
+      }
+
       printToolResult(result);
 
       messages.push({ role: 'tool', tool_call_id: id, content: result });
@@ -163,11 +190,19 @@ async function main() {
     output: process.stdout,
   });
 
+  // handle Ctrl+C
   rl.on('SIGINT', () => {
     rl.close();
-    console.log('\nBrutal exit!');
+    console.log('\nNo hello, no goodbye!');
     process.exit(0);
   });
+
+  // handle Ctrl+D and /quite or /exit
+  rl.on('close', () => {
+    console.log('Goodbye!');
+    process.exit(0);
+  });
+
 
   printIntro();
 
@@ -183,7 +218,6 @@ async function main() {
 
       if (['/quit', '/exit'].includes(input)) {
         rl.close();
-        console.log('See ya!');
         break;
       }
 
@@ -195,7 +229,7 @@ async function main() {
 
       await runAgentLoop(input);
     } catch (error) {
-      console.log(`${RED}● Error: ${error instanceof Error ? error.message : String(error)}${RESET}`);
+      console.log(`\n${RED}● Error: ${error instanceof Error ? error.message : String(error)}${RESET}`);
     }
   }
 }
