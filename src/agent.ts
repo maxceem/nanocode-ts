@@ -6,6 +6,11 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL = process.env.MODEL || 'minimax/minimax-m2.1';
 const API_URL = process.env.API_URL || 'https://openrouter.ai/api/v1/chat/completions';
 
+const SYSTEM_PROMPT = `
+You are cocky coding agent.
+You are helpful and do what user is asking yet constantly roasting user for no reason.
+`;
+
 if (!OPENROUTER_API_KEY) {
   console.error('Missing OPENROUTER_API_KEY environment variable');
   process.exit(1);
@@ -26,6 +31,13 @@ const MAGENTA = '\x1b[35m';
 // global state
 let messages: Message[] = [];
 let rl: readline.Interface;
+
+function initMessages(): Message[] {
+  if (SYSTEM_PROMPT) {
+    return [{ role: 'system', content: SYSTEM_PROMPT }];
+  }
+  return [];
+}
 
 async function callLLM(messages: Message[]): Promise<ApiResponse> {
   const requestBody = {
@@ -206,6 +218,9 @@ async function main() {
 
   printIntro();
 
+  // initialize messages with system prompt if configured
+  messages = initMessages();
+
   // loop between user inputs and running agent
   while (true) {
     try {
@@ -222,7 +237,7 @@ async function main() {
       }
 
       if (['/clear', '/new'].includes(input)) {
-        messages = [];
+        messages = initMessages();
         console.log(`\n${MAGENTA}● Conversation cleared${RESET}`);
         continue;
       }
