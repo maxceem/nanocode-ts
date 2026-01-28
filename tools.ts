@@ -19,7 +19,7 @@ export const tools: Tool[] = [
         type: 'object',
         properties: {
           path: { type: 'string', description: 'File path' },
-          offset: { type: 'integer', description: 'Start line (0-indexed)' },
+          offset: { type: 'integer', description: 'Start line (1-indexed, default: 1)' },
           limit: { type: 'integer', description: 'Number of lines' },
         },
         required: ['path'],
@@ -118,14 +118,15 @@ async function globToArray(pattern: string, cwd: string): Promise<string[]> {
 
 // tool handlers
 const toolHandlers: Record<string, (args: never) => Promise<string>> = {
-  async read({ path, offset = 0, limit }: { path: string; offset?: number; limit?: number }) {
+  async read({ path, offset = 1, limit }: { path: string; offset?: number; limit?: number }) {
     const content = await readFile(path, 'utf-8');
     const lines = content.split('\n');
-    const end = limit ? offset + limit : lines.length;
+    const start = offset - 1; // convert 1-indexed offset to 0-indexed
+    const end = limit ? start + limit : lines.length;
 
     return lines
-      .slice(offset, end)
-      .map((line, i) => `${String(offset + i + 1).padStart(4)}| ${line}`)
+      .slice(start, end)
+      .map((line, i) => `${String(offset + i).padStart(4)}| ${line}`)
       .join('\n');
   },
 
