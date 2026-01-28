@@ -4,18 +4,18 @@ Minimalistic implementation of agentic coding agent similar to Claude Code in Ty
 
 - The code has to be as easy to understand and follow as possible.
 - It should still follow TypeScript and Node.js best practices.
-- The minimal number lines or the speed of work is not priority - priority is that how easy is it to read and understand code.
+- Minimal line count or speed is not the priority — readability is.
 - We should not use third party libraries, but we must use any standard Node.js libraries when they make code simpler and easier to understand.
 
 ## Developing
 
-Alway use `npm` to keep things simple.
+Always use `npm` to keep things simple.
 
 ```bash
 npm start        # compiles and runs
 ```
 
-Always checking typing by `tsc --onEmit`.
+Always check types with `tsc --noEmit`.
 
 ## Environment
 
